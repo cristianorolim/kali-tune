@@ -109,14 +109,25 @@ enable_net_manager()
     service network-manager restart
 }
 
-#install_aptfast
-#regenerate_ssh
-#install_extra_packages
-#install_arachni
-#install_chromium
-#install_pev
-#install_bash_hacks
-#install_java_oracle
-#install_kernel_headers
+install_windows_theme()
+{
+    wget https://launchpad.net/~upubuntu-com/+archive/ubuntu/gtk3/+files/win2-7_0.1_all.deb
+    gdebi win2-7_0.1_all.deb
+    rm -rf win2-7_0.1_all.deb
+    gsettings set org.gnome.desktop.interface gtk-theme 'Win2-7-theme'
+    gsettings set org.gnome.desktop.wm.preferences theme 'Win2-7-theme'
+    gsettings set org.gnome.desktop.interface icon-theme 'Win2-7-icons'
+}
+
+install_aptfast
+regenerate_ssh
+install_extra_packages
+install_arachni
+install_chromium
+install_pev
+install_bash_hacks
+install_java_oracle
+install_kernel_headers
 enable_net_manager
+install_windows_theme
 
