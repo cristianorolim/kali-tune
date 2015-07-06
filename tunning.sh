@@ -119,6 +119,19 @@ install_windows_theme()
     gsettings set org.gnome.desktop.interface icon-theme 'Win2-7-icons'
 }
 
+install_windows_background()
+{
+    wget http://static.wallpedes.com/wallpaper/charming/charming-wallpaper-for-windows-windows-wallpaper-hd-themes-location-7-xp-changer-live-8-free-download.jpg -O win-wall.jpg
+    mv win-wall.jpg /usr/share/backgrounds/
+    gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/win-wall.jpg
+
+    wget http://p1.pichost.me/i/14/1366427.png -O win-bkgd.png
+    mv win-bkgd.png /usr/share/images/desktop-base/
+    sed 's/login-background.png/win-bkgd.png/' /usr/share/gdm/dconf/10-desktop-base-settings > /tmp/dsktop-set.tmp
+    cat /tmp/dsktop-set.tmp > /usr/share/gdm/dconf/10-desktop-base-settings
+    rm -f /tmp/dsktop-set.tmp
+}
+
 install_aptfast
 regenerate_ssh
 install_extra_packages
@@ -130,4 +143,5 @@ install_java_oracle
 install_kernel_headers
 enable_net_manager
 install_windows_theme
+install_windows_background
 
