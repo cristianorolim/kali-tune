@@ -81,6 +81,26 @@ install_bash_hacks()
     bashacks_depinstall
 }
 
+install_java_oracle()
+{
+    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz
+    tar -zxvf jdk-8u45-linux-x64.tar.gz
+    rm -f jdk-8u45-linux-x64.tar.gz
+    mv jdk1.8.0_45/ /opt/
+
+    update-alternatives --install /usr/bin/java java /opt/jdk1.8.0_45/bin/java 1
+    update-alternatives --install /usr/bin/javac javac /opt/jdk1.8.0_45/bin/javac 1
+    update-alternatives --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so 1
+    update-alternatives --set java /opt/jdk1.8.0_45/bin/java
+    update-alternatives --set javac /opt/jdk1.8.0_45/bin/javac
+    update-alternatives --set mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so
+}
+
+install_kernel_headers()
+{
+    $APT_COMMAND install -y linux-headers-$(uname -r)
+}
+
 install_aptfast
 regenerate_ssh
 install_extra_packages
@@ -88,4 +108,6 @@ install_arachni
 install_chromium
 install_pev
 install_bash_hacks
+install_java_oracle
+install_kernel_headers
 
