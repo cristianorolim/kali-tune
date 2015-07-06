@@ -13,6 +13,19 @@ install_aptfast()
     APT_COMMAND=/usr/local/bin/apt-fast
 }
 
+regenerate_ssh()
+{
+    /bin/rm -fv /etc/ssh/ssh_host_*
+    ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+    ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -b 4096 -t rsa
+    ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -b 521 -t ecdsa
+}
+
+install_extra_packages()
+{
+    $APT_COMMAND install -y iotop htop strace terminator rar unace apt-file filezilla gdebi tree
+}
+
 install_arachni()
 {
     wget http://downloads.arachni-scanner.com/arachni-1.1-0.5.7-linux-x86_64.tar.gz
@@ -38,14 +51,6 @@ install_chromium()
     rm /tmp/default.tmp
 }
 
-regenerate_ssh()
-{
-    /bin/rm -fv /etc/ssh/ssh_host_*
-    ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-    ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -b 4096 -t rsa
-    ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -b 521 -t ecdsa
-}
-
 install_pev()
 {
     wget http://sourceforge.net/projects/pev/files/pev-0.70/pev-0.70_amd64.deb/download -O pev-0.70_amd64.deb
@@ -58,9 +63,29 @@ install_extra_packages()
     $APT_COMMAND install -y iotop htop strace terminator rar unace apt-file filezilla gdebi tree
 }
 
-regenerate_ssh
+install_bash_hacks()
+{
+    git clone https://github.com/merces/bashacks.git
+    cd bashacks
+    make
+    mkdir /opt/bashacks
+    mv bashacks.sh /opt/bashacks/
+    echo "source /opt/bashacks/bashacks.sh" >> $HOME/.bashrc
+    source /opt/bashacks/bashacks.sh
+    cd ./man/en
+    gzip bashacks.1
+    cp bashacks.1.gz /usr/man/man1/
+    mandb
+    cd ../../..
+    rm -rf bashacks
+    bashacks_depinstall
+}
+
 install_aptfast
-install_chromium
+regenerate_ssh
 install_extra_packages
+install_arachni
+install_chromium
 install_pev
+install_bash_hacks
 
