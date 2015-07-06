@@ -101,13 +101,22 @@ install_kernel_headers()
     $APT_COMMAND install -y linux-headers-$(uname -r)
 }
 
-install_aptfast
-regenerate_ssh
-install_extra_packages
-install_arachni
-install_chromium
-install_pev
-install_bash_hacks
-install_java_oracle
-install_kernel_headers
+enable_net_manager()
+{
+    sed 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf > /tmp/net.tmp
+    cat /tmp/net.tmp > /etc/NetworkManager/NetworkManager.conf 
+    rm -f /tmp/net.tmp
+    service network-manager restart
+}
+
+#install_aptfast
+#regenerate_ssh
+#install_extra_packages
+#install_arachni
+#install_chromium
+#install_pev
+#install_bash_hacks
+#install_java_oracle
+#install_kernel_headers
+enable_net_manager
 
