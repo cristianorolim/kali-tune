@@ -30,8 +30,17 @@ install_aptfast()
 
 update_upgrade()
 {
-    $APT_COMMAND update
-    $APT_COMMAND -y dist-upgrade
+    if [ -f $CONFIG_DIR/update_upgrade ];
+    then
+        echo "update_upgrade already executed"
+    else
+        echo "executing update_upgrade"
+
+        $APT_COMMAND update
+        $APT_COMMAND -y dist-upgrade
+        
+        touch $CONFIG_DIR/update_upgrade
+    fi
 
     return 0
 }
@@ -59,7 +68,7 @@ regenerate_ssh()
 
 install_extra_packages()
 {
-    $APT_COMMAND install -y iotop htop strace terminator rar unace apt-file filezilla gdebi tree
+    $APT_COMMAND install -y iotop htop strace terminator rar unace apt-file filezilla gdebi tree secure-delete
 }
 
 install_arachni()
@@ -263,6 +272,53 @@ install_windows_background()
     return 0
 }
 
+change_kali_menu()
+{
+    if [ -f $CONFIG_DIR/change_kali_menu ];
+    then
+        echo "kali menu was already changed"
+    else
+        echo "changing kali menu"
+
+        sed 's/Kali Linux/Aid Tools/' Kali.directory | sed 's/k.png/system-services-trans.pnp/' > /tmp/kmenu.tmp
+        cat /tmp/kmenu.tmp > /usr/share/desktop-directories/Kali.directory
+        rm /tmp/kmenu.tmp
+
+        touch $CONFIG_DIR/change_kali_menu
+    fi
+
+    return 0
+}
+
+change_kernel_hard()
+{
+    local CONF
+    if [ -f $CONFIG_DIR/change_kernel_hard ];
+    then
+        echo "kernel parameters were already changed"
+    else
+        echo "changing kernel parameters"
+
+        CONF=/etc/sysctl.d/60-extra-hardening.conf
+
+        echo "net.ipv4.tcp_fin_timeout=30" >> $CONF
+        sysctl -w net.ipv4.tcp_fin_timeout=30
+
+        echo "net.ipv4.ip_local_port_range = 1025 65535" >> $CONF
+        sysctl -w net.ipv4.ip_local_port_range="1025 65535"
+
+        echo "net.ipv4.tcp_timestamps=0" >> $CONF
+        sysctl -w net.ipv4.tcp_timestamps=0
+
+        echo "net.ipv4.ip_default_ttl=128" >> $CONF
+        sysctl -w net.ipv4.ip_default_ttl=128
+
+        touch $CONFIG_DIR/change_kernel_hard
+    fi
+
+    return 0
+}
+
 start()
 {
     if [ -d $CONFIG_DIR ];
@@ -278,11 +334,17 @@ start()
     return 0
 }
 
+clean()
+{
+    echo "cleaning"
+    apt-get autoremove -y
+    apt-get clean
+}
+
 start
 install_aptfast
 update_upgrade
 regenerate_ssh
-exit 0
 install_extra_packages
 install_arachni
 install_chromium
@@ -293,5 +355,8 @@ install_kernel_headers
 enable_net_manager
 install_windows_theme
 install_windows_background
+change_kali_menu
+change_kernel_hard
+clean
 exit 0
 
