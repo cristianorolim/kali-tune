@@ -61,21 +61,20 @@ redo_sources_list()
 
 regenerate_ssh()
 {
-    
-
     if [ -f $CONFIG_DIR/regenerate_ssh ];
     then
         echo "ssh keys were already regenerated"
-    else
-        echo "regenerating ssh keys"
-
-        /bin/rm -fv /etc/ssh/ssh_host_*
-        ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-        ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -b 4096 -t rsa
-        ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -b 521 -t ecdsa
-        
-        touch $CONFIG_DIR/regenerate_ssh
+        return 0
     fi
+
+    echo "regenerating ssh keys"
+
+    /bin/rm -fv /etc/ssh/ssh_host_*
+    ssh-keygen -q -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
+    ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -N '' -b 4096 -t rsa
+    ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -N '' -b 521 -t ecdsa
+        
+    touch $CONFIG_DIR/regenerate_ssh
 
     return 0
 }
@@ -87,20 +86,39 @@ install_extra_packages()
 
 install_arachni()
 {
+    local ARACH_FILE
+    ARACH_FILE=arachni-1.1-0.5.7-linux-x86_64.tar.gz
     if [ -f $CONFIG_DIR/install_arachni ];
     then
         echo "arachni was already installed"
-    else
-        echo "installing arachni"
-
-        wget http://downloads.arachni-scanner.com/arachni-1.1-0.5.7-linux-x86_64.tar.gz
-        tar -zxvf arachni-1.1-0.5.7-linux-x86_64.tar.gz 
-        mv arachni-1.1-0.5.7 /opt/
-        for f in $(ls /opt/arachni-1.1-0.5.7/bin/); do ln -s /opt/arachni-1.1-0.5.7/bin/$f /usr/bin/$f; done
-        rm -f arachni-1.1-0.5.7-linux-x86_64.tar.gz
-        
-        touch $CONFIG_DIR/install_arachni
+        return 0
     fi
+
+    echo "installing arachni"
+
+    if [ -f $CONFIG_DIR/$ARACH_FILE ];
+    then
+        echo "$ARACH_FILE was already downloaded"
+    else
+        wget http://downloads.arachni-scanner.com/$ARACH_FILE -O $CONFIG_DIR/$ARACH_FILE
+    fi
+
+    echo "checking SHA512..."
+    cd $CONFIG_DIR
+    if echo "7cb672b788e57a2a9cea5e218f7473628ad813a87f24a890a1e116b88aad404b01f1d739f23700fd782835416310112718e9693924c81c0d5066e6c08b74eeb2  $CONFIG_DIR/$ARACH_FILE" | sha512sum --status -c - ;
+    then
+        echo "passed"
+    else
+        echo "not passed, aborting"
+        return 1
+    fi
+    
+    tar -zxvf arachni-1.1-0.5.7-linux-x86_64.tar.gz 
+    mv arachni-1.1-0.5.7 /opt/
+    for f in $(ls /opt/arachni-1.1-0.5.7/bin/); do ln -s /opt/arachni-1.1-0.5.7/bin/$f /usr/bin/$f; done
+    #rm -f arachni-1.1-0.5.7-linux-x86_64.tar.gz
+        
+    touch $CONFIG_DIR/install_arachni
 
     return 0
 }
@@ -110,16 +128,17 @@ install_chrome()
     if [ -f $CONFIG_DIR/install_chrome ];
     then
         echo "chrome was already installed"
-    else
-        echo "installing chrome"
-
-        $APT_COMMAND install -y libappindicator1
-        wget  https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        dpkg -i google-chrome-stable_current_amd64.deb
-        rm -f google-chrome-stable_current_amd64.deb
-        
-        touch $CONFIG_DIR/install_chrome
+        return 0
     fi
+
+    echo "installing chrome"
+
+    $APT_COMMAND install -y libappindicator1
+    wget  https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    dpkg -i google-chrome-stable_current_amd64.deb
+    rm -f google-chrome-stable_current_amd64.deb
+    
+    touch $CONFIG_DIR/install_chrome
 
     return 0
 }
@@ -129,17 +148,18 @@ install_chromium()
     if [ -f $CONFIG_DIR/install_chromium ];
     then
         echo "chromium was already installed"
-    else
-        echo "installing chromium"
-
-        $APT_COMMAND install -y chromium
-        cp /etc/chromium/default /etc/chromium/default.orig
-        sed 's/--password-store=detect/--user-data-dir --password-store=detect/' /etc/chromium/default > /tmp/default.tmp
-        cat /tmp/default.tmp > /etc/chromium/default
-        rm /tmp/default.tmp
-        
-        touch $CONFIG_DIR/install_chromium
+        return 0
     fi
+
+    echo "installing chromium"
+
+    $APT_COMMAND install -y chromium
+    cp /etc/chromium/default /etc/chromium/default.orig
+    sed 's/--password-store=detect/--user-data-dir --password-store=detect/' /etc/chromium/default > /tmp/default.tmp
+    cat /tmp/default.tmp > /etc/chromium/default
+    rm /tmp/default.tmp
+    
+    touch $CONFIG_DIR/install_chromium
 
     return 0
 }
@@ -149,15 +169,16 @@ install_pev()
     if [ -f $CONFIG_DIR/install_pev ];
     then
         echo "pev was already installed"
-    else
-        echo "installing pev"
-
-        wget http://sourceforge.net/projects/pev/files/pev-0.70/pev-0.70_amd64.deb/download -O pev-0.70_amd64.deb
-        dpkg -i pev-0.70_amd64.deb
-        rm -rf pev-0.70_amd64.deb
-        
-        touch $CONFIG_DIR/install_pev
+        return 0
     fi
+
+    echo "installing pev"
+
+    wget http://sourceforge.net/projects/pev/files/pev-0.70/pev-0.70_amd64.deb/download -O pev-0.70_amd64.deb
+    dpkg -i pev-0.70_amd64.deb
+    rm -rf pev-0.70_amd64.deb
+    
+    touch $CONFIG_DIR/install_pev
 
     return 0
 }
@@ -167,26 +188,26 @@ install_bashacks()
     if [ -f $CONFIG_DIR/install_bashacks ];
     then
         echo "bashacks was already installed"
-    else
-        echo "installing bashacks"
-
-        git clone https://github.com/merces/bashacks.git
-        cd bashacks
-        make
-        mkdir /opt/bashacks
-        mv bashacks.sh /opt/bashacks/
-        echo "source /opt/bashacks/bashacks.sh" >> $HOME/.bashrc
-        source /opt/bashacks/bashacks.sh
-        cd ./man/en
-        gzip bashacks.1
-        cp bashacks.1.gz /usr/man/man1/
-        mandb
-        cd ../../..
-        rm -rf bashacks
-        bashacks_depinstall
-        
-        touch $CONFIG_DIR/install_bashacks
+        return 0
     fi
+
+    echo "installing bashacks"
+    git clone https://github.com/merces/bashacks.git
+    cd bashacks
+    make
+    mkdir /opt/bashacks
+    mv bashacks.sh /opt/bashacks/
+    echo "source /opt/bashacks/bashacks.sh" >> $HOME/.bashrc
+    source /opt/bashacks/bashacks.sh
+    cd ./man/en
+    gzip bashacks.1
+    cp bashacks.1.gz /usr/man/man1/
+    mandb
+    cd ../../..
+    rm -rf bashacks
+    bashacks_depinstall
+        
+    touch $CONFIG_DIR/install_bashacks
 
     return 0
 }
@@ -196,23 +217,24 @@ install_java_oracle()
     if [ -f $CONFIG_DIR/install_java_oracle ];
     then
         echo "java_oracle was already installed"
-    else
-        echo "installing java_oracle"
-
-        wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz
-        tar -zxvf jdk-8u45-linux-x64.tar.gz
-        rm -f jdk-8u45-linux-x64.tar.gz
-        mv jdk1.8.0_45/ /opt/
-
-        update-alternatives --install /usr/bin/java java /opt/jdk1.8.0_45/bin/java 1
-        update-alternatives --install /usr/bin/javac javac /opt/jdk1.8.0_45/bin/javac 1
-        update-alternatives --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so 1
-        update-alternatives --set java /opt/jdk1.8.0_45/bin/java
-        update-alternatives --set javac /opt/jdk1.8.0_45/bin/javac
-        update-alternatives --set mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so
-        
-        touch $CONFIG_DIR/install_java_oracle
+        return 0
     fi
+
+    echo "installing java_oracle"
+
+    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u45-b14/jdk-8u45-linux-x64.tar.gz
+    tar -zxvf jdk-8u45-linux-x64.tar.gz
+    rm -f jdk-8u45-linux-x64.tar.gz
+    mv jdk1.8.0_45/ /opt/
+
+    update-alternatives --install /usr/bin/java java /opt/jdk1.8.0_45/bin/java 1
+    update-alternatives --install /usr/bin/javac javac /opt/jdk1.8.0_45/bin/javac 1
+    update-alternatives --install /usr/lib/mozilla/plugins/libjavaplugin.so mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so 1
+    update-alternatives --set java /opt/jdk1.8.0_45/bin/java
+    update-alternatives --set javac /opt/jdk1.8.0_45/bin/javac
+    update-alternatives --set mozilla-javaplugin.so /opt/jdk1.8.0_45/jre/lib/amd64/libnpjp2.so
+        
+    touch $CONFIG_DIR/install_java_oracle
 
     return 0
 }
@@ -227,16 +249,17 @@ enable_net_manager()
     if [ -f $CONFIG_DIR/enable_net_manager ];
     then
         echo "net_manager was already enabled"
-    else
-        echo "enabling net_manager"
-
-        sed 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf > /tmp/net.tmp
-        cat /tmp/net.tmp > /etc/NetworkManager/NetworkManager.conf 
-        rm -f /tmp/net.tmp
-        service network-manager restart
-        
-        touch $CONFIG_DIR/enable_net_manager
+        return 0
     fi
+
+    echo "enabling net_manager"
+
+    sed 's/managed=false/managed=true/' /etc/NetworkManager/NetworkManager.conf > /tmp/net.tmp
+    cat /tmp/net.tmp > /etc/NetworkManager/NetworkManager.conf 
+    rm -f /tmp/net.tmp
+    service network-manager restart
+    
+    touch $CONFIG_DIR/enable_net_manager
 
     return 0
 }
@@ -246,20 +269,21 @@ install_windows_theme()
     if [ -f $CONFIG_DIR/install_windows_theme ];
     then
         echo "windows_theme was already installed"
-    else
-        echo "installing windows_theme"
-
-        wget https://launchpad.net/~upubuntu-com/+archive/ubuntu/gtk3/+files/win2-7_0.1_all.deb
-
-        $APT_COMMAND -y install gtk2-engines-aurora gtk2-engines-murrine gtk2-engines-pixbuf gtk3-engines-unico murrine-themes
-        dpkg -i win2-7_0.1_all.deb
-        rm -rf win2-7_0.1_all.deb
-        gsettings set org.gnome.desktop.interface gtk-theme 'Win2-7-theme'
-        gsettings set org.gnome.desktop.wm.preferences theme 'Win2-7-theme'
-        gsettings set org.gnome.desktop.interface icon-theme 'Win2-7-icons'
-        
-        touch $CONFIG_DIR/install_windows_theme
+        return 0
     fi
+
+    echo "installing windows_theme"
+
+    wget https://launchpad.net/~upubuntu-com/+archive/ubuntu/gtk3/+files/win2-7_0.1_all.deb
+
+    $APT_COMMAND -y install gtk2-engines-aurora gtk2-engines-murrine gtk2-engines-pixbuf gtk3-engines-unico murrine-themes
+    dpkg -i win2-7_0.1_all.deb
+    rm -rf win2-7_0.1_all.deb
+    gsettings set org.gnome.desktop.interface gtk-theme 'Win2-7-theme'
+    gsettings set org.gnome.desktop.wm.preferences theme 'Win2-7-theme'
+    gsettings set org.gnome.desktop.interface icon-theme 'Win2-7-icons'
+    
+    touch $CONFIG_DIR/install_windows_theme
 
     return 0
 }
@@ -269,21 +293,21 @@ install_windows_background()
     if [ -f $CONFIG_DIR/install_windows_background ];
     then
         echo "windows_background was already installed"
-    else
-        echo "installing windows_background"
-
-        wget http://static.wallpedes.com/wallpaper/charming/charming-wallpaper-for-windows-windows-wallpaper-hd-themes-location-7-xp-changer-live-8-free-download.jpg -O win-wall.jpg
-        mv win-wall.jpg /usr/share/backgrounds/
-        gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/win-wall.jpg
-
-        wget http://p1.pichost.me/i/14/1366427.png -O win-bkgd.png
-        mv win-bkgd.png /usr/share/images/desktop-base/
-        sed 's/login-background.png/win-bkgd.png/' /usr/share/gdm/dconf/10-desktop-base-settings > /tmp/dsktop-set.tmp
-        cat /tmp/dsktop-set.tmp > /usr/share/gdm/dconf/10-desktop-base-settings
-        rm -f /tmp/dsktop-set.tmp
-        
-        touch $CONFIG_DIR/install_windows_background
+        return 0
     fi
+
+    echo "installing windows_background"
+    wget http://static.wallpedes.com/wallpaper/charming/charming-wallpaper-for-windows-windows-wallpaper-hd-themes-location-7-xp-changer-live-8-free-download.jpg -O win-wall.jpg
+    mv win-wall.jpg /usr/share/backgrounds/
+    gsettings set org.gnome.desktop.background picture-uri file:///usr/share/backgrounds/win-wall.jpg
+
+    wget http://p1.pichost.me/i/14/1366427.png -O win-bkgd.png
+    mv win-bkgd.png /usr/share/images/desktop-base/
+    sed 's/login-background.png/win-bkgd.png/' /usr/share/gdm/dconf/10-desktop-base-settings > /tmp/dsktop-set.tmp
+    cat /tmp/dsktop-set.tmp > /usr/share/gdm/dconf/10-desktop-base-settings
+    rm -f /tmp/dsktop-set.tmp
+        
+    touch $CONFIG_DIR/install_windows_background
 
     return 0
 }
@@ -295,15 +319,16 @@ change_kali_menu()
     if [ -f $CONFIG_DIR/change_kali_menu ];
     then
         echo "kali menu was already changed"
-    else
-        echo "changing kali menu"
-
-        sed 's/Kali Linux/Aid Tools/' $KMFILE | sed 's/k.png/system-services-trans.pnp/' > /tmp/kmenu.tmp
-        cat /tmp/kmenu.tmp > $KMFILE
-        rm /tmp/kmenu.tmp
-
-        touch $CONFIG_DIR/change_kali_menu
+        return 0
     fi
+
+    echo "changing kali menu"
+
+    sed 's/Kali Linux/Aid Tools/' $KMFILE | sed 's/k.png/system-services-trans.pnp/' > /tmp/kmenu.tmp
+    cat /tmp/kmenu.tmp > $KMFILE
+    rm /tmp/kmenu.tmp
+
+    touch $CONFIG_DIR/change_kali_menu
 
     return 0
 }
@@ -314,40 +339,41 @@ change_kernel_hard()
     if [ -f $CONFIG_DIR/change_kernel_hard ];
     then
         echo "kernel parameters were already changed"
-    else
-        echo "changing kernel parameters"
-
-        CONF=/etc/sysctl.d/60-extra-hardening.conf
-
-        echo "net.ipv4.tcp_fin_timeout=30" >> $CONF
-        sysctl -w net.ipv4.tcp_fin_timeout=30
-
-        echo "net.ipv4.ip_local_port_range = 1025 65535" >> $CONF
-        sysctl -w net.ipv4.ip_local_port_range="1025 65535"
-
-        echo "net.ipv4.tcp_timestamps=0" >> $CONF
-        sysctl -w net.ipv4.tcp_timestamps=0
-
-        echo "net.ipv4.ip_default_ttl=128" >> $CONF
-        sysctl -w net.ipv4.ip_default_ttl=128
-
-        touch $CONFIG_DIR/change_kernel_hard
+        return 0
     fi
+
+    echo "changing kernel parameters"
+
+    CONF=/etc/sysctl.d/60-extra-hardening.conf
+    echo "net.ipv4.tcp_fin_timeout=30" >> $CONF
+    sysctl -w net.ipv4.tcp_fin_timeout=30
+
+    echo "net.ipv4.ip_local_port_range = 1025 65535" >> $CONF
+    sysctl -w net.ipv4.ip_local_port_range="1025 65535"
+
+    echo "net.ipv4.tcp_timestamps=0" >> $CONF
+    sysctl -w net.ipv4.tcp_timestamps=0
+
+    echo "net.ipv4.ip_default_ttl=128" >> $CONF
+    sysctl -w net.ipv4.ip_default_ttl=128
+
+    touch $CONFIG_DIR/change_kernel_hard
 
     return 0
 }
 
-start()
+start_tune()
 {
     if [ -d $CONFIG_DIR ];
     then
         echo "config folder exists"
-    else
-        echo "config folder doesn't exist"
-        echo "creating config folder"
-        echo "mkdir $CONFIG_DIR" 
-        mkdir $CONFIG_DIR
+        return 0
     fi
+
+    echo "config folder doesn't exist"
+    echo "creating config folder"
+    echo "mkdir $CONFIG_DIR" 
+    mkdir $CONFIG_DIR
 
     return 0
 }
@@ -425,7 +451,7 @@ enable_vim_syntax_high()
 case $1 in
     "all")
         echo "all"
-        start
+        start_tune
         redo_sources_list
         install_aptfast
         update_upgrade
@@ -455,30 +481,35 @@ case $1 in
     ;;
     "update")
         echo "update"
-        start
+        start_tune
         install_aptfast
         update_upgrade
         clean
     ;;
     "windownize")
         echo "windownize"
-        start
+        start_tune
         install_aptfast
-        install_extra_packages
         install_windows_theme
         install_windows_background
         change_kali_menu
     ;;
     "vimsyntax")
         echo "vimsyntax"
-        start
+        start_tune
         enable_vim_syntax_high
     ;;
     "java")
         echo "java"
-        start
+        start_tune
         install_java_oracle
     ;;
+    "arachni")
+        echo "arachni"
+        start_tune
+        install_arachni
+    ;;
+
 	*) echo "Options:"
            echo "    all"
            echo "    vmtools"
@@ -486,6 +517,7 @@ case $1 in
            echo "    windownize"
            echo "    vimsyntax"
            echo "    java"
+           echo "    arachni"
     ;;
 esac
 
