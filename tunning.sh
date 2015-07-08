@@ -230,7 +230,9 @@ install_windows_theme()
         echo "installing windows_theme"
 
         wget https://launchpad.net/~upubuntu-com/+archive/ubuntu/gtk3/+files/win2-7_0.1_all.deb
-        gdebi win2-7_0.1_all.deb
+
+        $APT_COMMAND -y install gtk2-engines-aurora gtk2-engines-murrine gtk2-engines-pixbuf gtk3-engines-unico murrine-themes
+        dpkg -i win2-7_0.1_all.deb
         rm -rf win2-7_0.1_all.deb
         gsettings set org.gnome.desktop.interface gtk-theme 'Win2-7-theme'
         gsettings set org.gnome.desktop.wm.preferences theme 'Win2-7-theme'
@@ -268,14 +270,16 @@ install_windows_background()
 
 change_kali_menu()
 {
+    local KMFILE
+    KMFILE="/usr/share/desktop-directories/Kali.directory"
     if [ -f $CONFIG_DIR/change_kali_menu ];
     then
         echo "kali menu was already changed"
     else
         echo "changing kali menu"
 
-        sed 's/Kali Linux/Aid Tools/' Kali.directory | sed 's/k.png/system-services-trans.pnp/' > /tmp/kmenu.tmp
-        cat /tmp/kmenu.tmp > /usr/share/desktop-directories/Kali.directory
+        sed 's/Kali Linux/Aid Tools/' $KMFILE | sed 's/k.png/system-services-trans.pnp/' > /tmp/kmenu.tmp
+        cat /tmp/kmenu.tmp > $KMFILE
         rm /tmp/kmenu.tmp
 
         touch $CONFIG_DIR/change_kali_menu
@@ -427,20 +431,38 @@ case $1 in
     ;;
     "update")
         echo "update"
+        start
         install_aptfast
         update_upgrade
+        clean
     ;;
     "windownize")
         echo "windownize"
+        start
+        install_aptfast
         install_extra_packages
         install_windows_theme
         install_windows_background
+        change_kali_menu
+    ;;
+    "vimsyntax")
+        echo "vimsyntax"
+        start
+        enable_vim_syntax_high
     ;;
     "java")
         echo "java"
+        start
         install_java_oracle
     ;;
-	*) echo "INVALID NUMBER!" ;;
+	*) echo "Options:"
+           echo "    all"
+           echo "    vmtools"
+           echo "    update"
+           echo "    windownize"
+           echo "    vimsyntax"
+           echo "    java"
+    ;;
 esac
 
 exit 0
