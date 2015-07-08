@@ -463,9 +463,9 @@ case $1 in
         install_bashacks
         install_java_oracle
         install_kernel_headers
-        enable_net_manager
         install_windows_theme
         install_windows_background
+        enable_net_manager
         change_kali_menu
         change_kernel_hard
         enable_vim_syntax_high
