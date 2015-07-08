@@ -39,6 +39,26 @@ update_upgrade()
     return 0
 }
 
+redo_sources_list()
+{
+    if [ -f $CONFIG_DIR/redo_sources_list ];
+    then
+        echo "sources.list was already regenerated"
+        return 0
+    fi
+
+    echo "regenerating sources.list"
+
+    echo "deb http://http.kali.org/kali moto main non-free contrib" > /etc/apt/sources.list
+    echo "deb-src http://http.kali.org/kali moto main non-free contrib" >> /etc/apt/sources.list
+    echo "deb http://security.kali.org/ moto/updates main contrib non-free" >> /etc/apt/sources.list
+    echo "deb-src http://security.kali.org/ moto/updates main contrib non-free" >> /etc/apt/sources.list
+
+    touch $CONFIG_DIR/redo_sources_list
+
+    return 0
+}
+
 regenerate_ssh()
 {
     
@@ -406,6 +426,7 @@ case $1 in
     "all")
         echo "all"
         start
+        redo_sources_list
         install_aptfast
         update_upgrade
         regenerate_ssh
