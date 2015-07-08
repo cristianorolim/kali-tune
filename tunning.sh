@@ -234,6 +234,7 @@ enable_net_manager()
         cat /tmp/net.tmp > /etc/NetworkManager/NetworkManager.conf 
         rm -f /tmp/net.tmp
         service network-manager restart
+        sleep 4
         
         touch $CONFIG_DIR/enable_net_manager
     fi
@@ -437,9 +438,9 @@ case $1 in
         install_bashacks
         install_java_oracle
         install_kernel_headers
-        enable_net_manager
         install_windows_theme
         install_windows_background
+        enable_net_manager
         change_kali_menu
         change_kernel_hard
         enable_vim_syntax_high
