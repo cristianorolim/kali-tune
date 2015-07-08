@@ -391,6 +391,8 @@ enable_vim_syntax_high()
         return 0
     fi
 
+    echo "enabling vim syntax highlighting"
+
     sed 's/"syntax on/syntax on/' /etc/vim/vimrc > /tmp/vimrc.tmp
     cat /tmp/vimrc.tmp > /etc/vim/vimrc
     rm -f /tmp/vimrc.tmp
@@ -426,6 +428,7 @@ case $1 in
     ;;
     "vmtools")
         echo "vmtools"
+        install_aptfast
         install_kernel_headers
         install_vmware_tools
     ;;
