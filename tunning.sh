@@ -12,36 +12,30 @@ install_aptfast()
     then
         echo "apt-fast already installed"
         APT_COMMAND=/usr/local/bin/apt-fast
-    else
-        echo "installing apt-fast"
-
-        curl http://www.mattparnell.com/linux/apt-fast/apt-fast.sh > /tmp/apt-fast.tmp
-        sed 's/axel -a/axel -a -n 8/' /tmp/apt-fast.tmp > /tmp/apt-fast
-        rm /tmp/apt-fast.tmp
-        mv /tmp/apt-fast /usr/local/bin
-        chmod +x /usr/local/bin/apt-fast
-        APT_COMMAND=/usr/local/bin/apt-fast
-        
-        touch $CONFIG_DIR/aptfast
+        return 0
     fi
 
+    echo "installing apt-fast"
+
+    curl http://www.mattparnell.com/linux/apt-fast/apt-fast.sh > /tmp/apt-fast.tmp
+    sed 's/axel -a/axel -a -n 8/' /tmp/apt-fast.tmp > /tmp/apt-fast
+    rm /tmp/apt-fast.tmp
+    mv /tmp/apt-fast /usr/local/bin
+    chmod +x /usr/local/bin/apt-fast
+    APT_COMMAND=/usr/local/bin/apt-fast
+
+    touch $CONFIG_DIR/aptfast
+    
     return 0
 }
 
 update_upgrade()
 {
-    if [ -f $CONFIG_DIR/update_upgrade ];
-    then
-        echo "update_upgrade already executed"
-    else
-        echo "executing update_upgrade"
+    echo "executing update_upgrade"
 
-        $APT_COMMAND update
-        $APT_COMMAND -y dist-upgrade
+    $APT_COMMAND update
+    $APT_COMMAND -y dist-upgrade
         
-        touch $CONFIG_DIR/update_upgrade
-    fi
-
     return 0
 }
 
@@ -341,22 +335,113 @@ clean()
     apt-get clean
 }
 
-start
-install_aptfast
-update_upgrade
-regenerate_ssh
-install_extra_packages
-install_arachni
-install_chromium
-install_pev
-install_bashacks
-install_java_oracle
-install_kernel_headers
-enable_net_manager
-install_windows_theme
-install_windows_background
-change_kali_menu
-change_kernel_hard
-clean
+install_vmware_tools()
+{
+    if [ -f $CONFIG_DIR/install_vmware_tools ];
+    then
+        echo "vmware_tools already installed"
+        return 0
+    fi
+
+    local VMT_FILE
+    VMT_FILE="com.vmware.fusion.tools.linux.zip.tar"
+    if [ -f $CONFIG_DIR/$VMT_FILE ];
+    then
+        echo "$CONFIG_DIR/$VMT_FILE exists"
+    else
+        echo "downloading $VMT_FILE"
+        axel -n 8 -a https://softwareupdate.vmware.com/cds/vmw-desktop/fusion/7.1.2/2779224/packages/$VMT_FILE -o $CONFIG_DIR/$VMT_FILE
+    fi
+
+    echo "checking SHA512..."
+    cd $CONFIG_DIR
+    if echo "9aa69d307afdd3aca92428afc8016b824a06657cfaa36a473cab1ad94d0669c4cd6972df79180d241da2ac04e2b263a8dcd796ed88bd5cd433a7d1af83feba05  $VMT_FILE" | sha512sum --status -c - ;
+    then
+        echo "passed"
+    else
+        echo "not passed, aborting"
+        return 1
+    fi
+    tar -xvf $VMT_FILE
+    unzip com.vmware.fusion.tools.linux.zip
+    cd ./payload/
+    7z x linux.iso
+    tar -zxvf VMwareTools-9.9.3-2759765.tar.gz
+    cd vmware-tools-distrib/
+    ./vmware-install.pl -d
+    cd ../..
+    for f in ./payload com.vmware.fusion.tools.linux.zip descriptor.xml manifest.plist;
+    do
+        rm -rf $f;
+    done
+
+    touch $CONFIG_DIR/install_vmware_tools
+    return 0
+}
+
+enable_vim_syntax_high()
+{
+    if [ -f $CONFIG_DIR/enable_vim_syntax_high ];
+    then
+        echo "vim syntax highlighting already enabled"
+        return 0
+    fi
+
+    sed 's/"syntax on/syntax on/' /etc/vim/vimrc > /tmp/vimrc.tmp
+    cat /tmp/vimrc.tmp > /etc/vim/vimrc
+    rm -f /tmp/vimrc.tmp
+
+    touch $CONFIG_DIR/enable_vim_syntax_high
+
+    return 0
+}
+
+case $1 in
+    "all")
+        echo "all"
+        start
+        install_aptfast
+        update_upgrade
+        regenerate_ssh
+        install_extra_packages
+        install_arachni
+        install_chromium
+        install_pev
+        install_bashacks
+        install_java_oracle
+        install_kernel_headers
+        enable_net_manager
+        install_windows_theme
+        install_windows_background
+        change_kali_menu
+        change_kernel_hard
+        enable_vim_syntax_high
+        clean
+
+        exit 0
+    ;;
+    "vmtools")
+        echo "vmtools"
+        install_kernel_headers
+        install_vmware_tools
+    ;;
+    "update")
+        echo "update"
+        install_aptfast
+        update_upgrade
+    ;;
+    "windownize")
+        echo "windownize"
+        install_extra_packages
+        install_windows_theme
+        install_windows_background
+    ;;
+    "java")
+        echo "java"
+        install_java_oracle
+    ;;
+	*) echo "INVALID NUMBER!" ;;
+esac
+
 exit 0
 
